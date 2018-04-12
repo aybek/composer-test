@@ -1,0 +1,84 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Defines a data model for a blind vehicle auction
+ */
+namespace org.acme.bank.test
+
+asset Product identified by productId {
+  o String productId
+  o ProductState state
+  o Double price
+  --> Trader owner optional
+  --> Seller seller
+  --> BankAccount sellerBankAccount
+}
+
+asset BankAccount identified by accountId {
+  o String accountId
+  o Double balance
+  --> Trader owner
+}
+
+enum ProductState {
+  o FOR_SALE
+  o NOT_FOR_SALE
+  o SOLD
+  o BLOCKED
+}
+
+asset RequestList identified by requestListId {
+  o String requestListId
+  o Request[] requests optional
+}
+
+abstract participant Trader identified by participantId {
+  o String participantId
+  o String firstName
+  o String lastName
+}
+
+participant Bank identified by participantId {
+  o String participantId
+  o String Name
+  o String address
+}
+
+participant Buyer extends Trader {
+  
+}
+
+participant Seller extends Trader {
+  
+}
+
+transaction Request {
+  --> RequestList requestList
+  --> Product product
+  --> BankAccount buyerBankAccount
+}
+
+transaction CommitRequest {
+  --> RequestList requestList
+}
+
+event RequestNotification {
+    --> Product product
+}
+
+event CommitFailedNotification {
+    o String message
+    --> Product product
+}

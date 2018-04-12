@@ -1,0 +1,28 @@
+
+query selectAllProducts {
+  description: "Select all Products"
+  statement:
+      SELECT org.acme.bank.test.Product
+          WHERE (seller == _$seller)
+}
+
+query selectRequestList {
+  description: "Select request list"
+  statement:
+      SELECT org.acme.bank.test.RequestList
+}
+
+query getTraderBalance {
+  description: "Get Balance"
+  statement:
+      SELECT org.acme.bank.test.BankAccount
+          WHERE (owner.participantId == _$id)
+}
+
+
+query selectAvailableProducts {
+  description: "Select all available products"
+  statement:
+      SELECT org.acme.bank.test.Product
+          WHERE (state == 'FOR_SALE')
+}
