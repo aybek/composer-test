@@ -128,7 +128,7 @@ describe('BankTrade', () => {
             const productRegistry = await businessNetworkConnection.getAssetRegistry(NS + '.Product');
             const requestListingRegistry = await businessNetworkConnection.getAssetRegistry(NS + '.RequestListing');
             const traderRegistry = await businessNetworkConnection.getParticipantRegistry(NS + '.Trader');
-            const bankRegistry = await businessNetworkConnection.getParticipantRegistry(NS + '.Bank');
+            const accountRegistry = await businessNetworkConnection.getAssetRegistry(NS + '.BankAccount');
 
             
             await productRegistry.add(product);
@@ -141,8 +141,7 @@ describe('BankTrade', () => {
 
     
             await bankRegistry.add(bank);
-
-            
+            await accountRegistry.addAll([buyerAccount,sellerAccount]);            
             await businessNetworkConnection.submitTransaction(request);
 
             
@@ -208,6 +207,7 @@ describe('BankTrade', () => {
             const requestListingRegistry = await businessNetworkConnection.getAssetRegistry(NS + '.RequestListing');
             const traderRegistry = await businessNetworkConnection.getParticipantRegistry(NS + '.Trader');
             const bankRegistry = await businessNetworkConnection.getParticipantRegistry(NS + '.Bank');
+            const accountRegistry = await businessNetworkConnection.getAssetRegistry(NS + '.BankAccount');
 
             
             await productRegistry.add(product);
@@ -220,6 +220,7 @@ describe('BankTrade', () => {
 
     
             await bankRegistry.add(bank);
+            await accountRegistry.addAll([buyerAccount,sellerAccount]);
 
             
             await businessNetworkConnection.submitTransaction(request);
@@ -244,14 +245,14 @@ describe('BankTrade', () => {
           
 
             
-            const theBuyer = await traderRegistry.get(buyer.$identifier);
-            const theSeller = await traderRegistry.get(seller.$identifier);
+            const theBuyerAccount = await accountRegistry.get(buyerAccount.$identifier);
+            const theSellerAccount = await accountRegistry.get(sellerAccount.$identifier);
 
             
-            theBuyer.balance.should.equal(800);
+            theBuyerAccount.balance.should.equal(800);
 
             
-            theSeller.balance.should.equal(200);
+            theSellerAccount.balance.should.equal(200);
 
             
          
