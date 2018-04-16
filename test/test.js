@@ -119,8 +119,88 @@ describe('BankTrade', () => {
 
           
             const request = factory.newTransaction(NS, 'Request');
-            offer.product = factory.newRelationship(NS, 'Product', product.$identifier);
-            offer.buyerAccount = factory.newRelationship(NS, 'BankAccount', 'LISTING_001');
+            request.product = factory.newRelationship(NS, 'Product', product.$identifier);
+            request.buyerBankAccount = factory.newRelationship(NS, 'BankAccount',buyerAccount.$identifier);        
+            request.requestList = factory.newRelationship(NS, 'RequestList', listing.$identifier);
+           
+
+            // Get the registries.
+            const productRegistry = await businessNetworkConnection.getAssetRegistry(NS + '.Product');
+            const requestListingRegistry = await businessNetworkConnection.getAssetRegistry(NS + '.RequestListing');
+            const traderRegistry = await businessNetworkConnection.getParticipantRegistry(NS + '.Trader');
+            const bankRegistry = await businessNetworkConnection.getParticipantRegistry(NS + '.Bank');
+
+            
+            await productRegistry.add(product);
+
+            
+            await requestListingRegistry.add(listing);
+
+    
+            await traderRegistry.addAll([buyer, seller]);
+
+    
+            await bankRegistry.add(bank);
+
+            
+            await businessNetworkConnection.submitTransaction(request);
+
+            
+  
+        
+            let newListing = await requestListingRegistry.get(listing.$identifier);
+
+        
+            newListing.requests.length.should.equal(1);
+          
+           const product1 = await productRegistry.get(product.$identifier);
+
+            
+            product1.state.should.equal('BLOCKED');
+   
+          
+        });
+    });
+  
+    describe('#commitRequest', () => {
+
+        it('should commit the requests in requestListing', async () => {
+
+            const factory = businessNetworkConnection.getBusinessNetwork().getFactory();
+
+            const seller = factory.newResource(NS, 'Trader', '111');
+            seller.firstName = 'Seller';
+            seller.lastName = 'Selman';
+
+            const buyer = factory.newResource(NS, 'Trader', '222');
+            buyer.firstName = 'Buyer';
+            buyer.lastName = 'Buyman';
+
+            const bank = factory.newResource(NS, 'Bank', '333');
+            bank.name = 'Kazkom';
+            bank.address = 'abaya 33';
+
+            const sellerAccount = factory.newResource(NS,'BankAccount' ,'444');
+            sellerAccount.owner = factory.newRelationship(NS, 'Trader', seller.$identifier);
+            sellerAccount.balance = 0;
+
+            const buyerAccount = factory.newResource(NS,'BankAccount', '555');
+            buyerAccount.owner = factory.newRelationship(NS, 'Trader', buyer.$identifier);
+            buyerAccount.balance = 1000;
+
+            const product = factory.newResource(NS,'Product', '444');
+            product.seller = factory.newRelationship(NS, 'Trader', seller.$identifier);
+            product.sellerAccount = factory.newRelationship(NS, 'BankAccount', sellerAccount.$identifier);
+            product.price = 200;
+
+        
+            const listing = factory.newResource(NS, 'RequestList', 'LISTING_002');
+
+          
+            const request = factory.newTransaction(NS, 'Request');
+            request.product = factory.newRelationship(NS, 'Product', product.$identifier);
+            request.buyerBankAccount = factory.newRelationship(NS, 'BankAccount',buyerAccount.$identifier);        
+            request.requestList = factory.newRelationship(NS, 'RequestList', listing.$identifier);
         
 
             // Get the registries.
@@ -139,33 +219,29 @@ describe('BankTrade', () => {
             await traderRegistry.addAll([buyer, seller]);
 
     
-            await bankRegistry.addAll([bank]);
+            await bankRegistry.add(bank);
 
             
             await businessNetworkConnection.submitTransaction(request);
 
             
-            const req1 = factory.newTransaction(NS, 'Request');
-                offer.product = factory.newRelationship(NS, 'Product', product.$identifier);
-                offer.buyerAccount = factory.newRelationship(NS, 'BankAccount', 'LISTING_001');
+            const req1 = factory.newTransaction(NS, 'CommitRequest');
+                req1.requestList = factory.newRelationship(NS, 'RequestList', listing.$identifier);
                 await businessNetworkConnection.submitTransaction(req1);
 
         
             let newListing = await requestListingRegistry.get(listing.$identifier);
 
         
-            newListing.requests.length.should.equal(2);
+            newListing.requests.length.should.equal(0);
 
             
-            const commit = factory.newTransaction(NS, 'CommitRequest');
-            commit.listing = factory.newRelationship(NS, 'RequestListing', 'LISTING_001');
-            await businessNetworkConnection.submitTransaction(commit);
+            const product1 = await productRegistry.get(product.$identifier);
 
-        
-            newListing = await requestListingRegistry.get(listing.$identifier);
-
-
-            newListing.state.should.equal('SOLD');
+            
+            product1.state.should.equal('SOLD');
+            product1.owner.getIdentifier().should.equal(buyer.$identifier);
+          
 
             
             const theBuyer = await traderRegistry.get(buyer.$identifier);
@@ -178,10 +254,10 @@ describe('BankTrade', () => {
             theSeller.balance.should.equal(200);
 
             
-            const product1 = await productRegistry.get(product.$identifier);
+         
 
             
-            product1.owner.getIdentifier().should.equal(buyer.$identifier);
+            
         });
     });
 });
